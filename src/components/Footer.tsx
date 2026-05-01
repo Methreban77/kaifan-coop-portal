@@ -9,7 +9,11 @@ export function Footer() {
       <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <img src={logo} alt="Kaifan Co-operative Society" className="h-12 w-auto object-contain" />
+            <img
+              src={logo}
+              alt="Kaifan Co-operative Society"
+              className="h-12 w-auto object-contain"
+            />
           </div>
           <p className="text-sm text-muted-foreground max-w-xs">
             {lang === "ar"
@@ -20,22 +24,44 @@ export function Footer() {
         <div>
           <h4 className="font-semibold mb-3">{t("footer.contact")}</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {t("footer.address")}</li>
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> +965 0000 0000</li>
-            <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> info@kaifancoop.com</li>
+            <li className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" /> {t("footer.address")}
+            </li>
+            <li className="flex items-center gap-2">
+              <Phone className="h-4 w-4" /> +965 0000 0000
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="h-4 w-4" /> info@kaifancoop.net
+            </li>
           </ul>
         </div>
         <div>
-          <h4 className="font-semibold mb-3">{lang === "ar" ? "روابط" : "Links"}</h4>
+          <h4 className="font-semibold mb-3">
+            {lang === "ar" ? "روابط" : "Links"}
+          </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><a href="#about" className="hover:text-primary">{t("nav.about")}</a></li>
-            <li><a href="#board" className="hover:text-primary">{t("nav.board")}</a></li>
-            <li><a href="#requirements" className="hover:text-primary">{t("nav.requirements")}</a></li>
+            <li>
+              <a href="#about" className="hover:text-primary">
+                {t("nav.about")}
+              </a>
+            </li>
+            <li>
+              <a href="#board" className="hover:text-primary">
+                {t("nav.board")}
+              </a>
+            </li>
+            <li>
+              <a href="#requirements" className="hover:text-primary">
+                {t("nav.requirements")}
+              </a>
+            </li>
           </ul>
         </div>
       </div>
       <div className="border-t border-border/60 py-4">
-        <p className="container mx-auto px-4 text-xs text-muted-foreground text-center">{t("footer.rights")}</p>
+        <p className="container mx-auto px-4 text-xs text-muted-foreground text-center">
+          {t("footer.rights")}
+        </p>
       </div>
     </footer>
   );
