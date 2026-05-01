@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,16 +16,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Calendar, FileText, Upload, Bell, X, Filter, Star, User } from "lucide-react";
+import {
+  Calendar,
+  FileText,
+  Upload,
+  Bell,
+  X,
+  Filter,
+  Star,
+  User,
+} from "lucide-react";
 import { VendorProfileTab } from "@/components/vendor/VendorProfileTab";
 import { VendorRatingsTab } from "@/components/vendor/VendorRatingsTab";
 
@@ -85,32 +109,70 @@ export default function Dashboard() {
   const loadAll = async () => {
     if (!user) return;
     const session = await supabase.auth.getSession();
-    const quotesRequest = fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`, {
-      headers: {
-        Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    const quotesRequest = fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
       },
-    });
+    );
     const [r, quotesResponse, n, c, p] = await Promise.all([
-      supabase.from("ho_requirements").select("*").eq("status", "open").order("deadline", { ascending: true, nullsFirst: false }),
+      supabase
+        .from("ho_requirements")
+        .select("*")
+        .eq("status", "open")
+        .order("deadline", { ascending: true, nullsFirst: false }),
       quotesRequest,
-      supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
-      supabase.from("partner_categories").select("id,name,name_ar").eq("active", true).order("name"),
-      supabase.from("partner_profiles").select("primary_category_id,category_ids").eq("partner_id", user.id).maybeSingle(),
+      //  supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+      supabase
+        .from("partner_categories")
+        .select("id,name,name_ar")
+        .eq("active", true)
+        .order("name"),
+      supabase
+        .from("partner_profiles")
+        .select("primary_category_id,category_ids")
+        .eq("partner_id", user.id)
+        .maybeSingle(),
     ]);
-    const quotesResult = await quotesResponse.json().catch(() => ({ quotations: [] }));
+
+    let notificationsData = [];
+
+    if (user) {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      notificationsData = data ?? [];
+    }
+
+    setNotifications(notificationsData);
+
+    const quotesResult = await quotesResponse
+      .json()
+      .catch(() => ({ quotations: [] }));
     setReqs((r.data as Requirement[]) ?? []);
     setQuotations((quotesResponse.ok ? quotesResult.quotations : []) ?? []);
     setNotifications((n.data as Notification[]) ?? []);
     setCategories((c.data as Category[]) ?? []);
-    const prof = p.data as { primary_category_id: string | null; category_ids: string[] } | null;
+    const prof = p.data as {
+      primary_category_id: string | null;
+      category_ids: string[];
+    } | null;
     const ids = new Set<string>();
     if (prof?.primary_category_id) ids.add(prof.primary_category_id);
     (prof?.category_ids ?? []).forEach((x) => ids.add(x));
     setMyCategoryIds(Array.from(ids));
   };
 
-  useEffect(() => { loadAll(); }, [user]);
+  useEffect(() => {
+    loadAll();
+  }, [user]);
 
   // Open submission dialog if ?req= present
   useEffect(() => {
@@ -123,7 +185,9 @@ export default function Dashboard() {
 
   const closeDialog = () => {
     setActiveReq(null);
-    setPrice(""); setNotes(""); setFiles([]);
+    setPrice("");
+    setNotes("");
+    setFiles([]);
     if (params.get("req")) {
       params.delete("req");
       setParams(params, { replace: true });
@@ -133,19 +197,29 @@ export default function Dashboard() {
   const onSubmit = async () => {
     if (!user || !activeReq) return;
     const p = Number(price);
-    if (!p || p <= 0) return toast.error(lang === "ar" ? "أدخل سعراً صحيحاً" : "Enter a valid price");
+    if (!p || p <= 0)
+      return toast.error(
+        lang === "ar" ? "أدخل سعراً صحيحاً" : "Enter a valid price",
+      );
     setSubmitting(true);
 
     const session = await supabase.auth.getSession();
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requirement_id: activeReq.id,
+          price: p,
+          notes: notes || null,
+        }),
       },
-      body: JSON.stringify({ requirement_id: activeReq.id, price: p, notes: notes || null }),
-    });
+    );
     const result = await response.json().catch(() => ({}));
     const q = result.quotation as { id: string } | undefined;
 
@@ -157,30 +231,38 @@ export default function Dashboard() {
     // Upload files
     for (const f of files) {
       const path = `${user.id}/${q.id}/${Date.now()}-${f.name}`;
-      const { error: upErr } = await supabase.storage.from("vendor-documents").upload(path, f, {
-        cacheControl: "3600",
-      });
+      const { error: upErr } = await supabase.storage
+        .from("vendor-documents")
+        .upload(path, f, {
+          cacheControl: "3600",
+        });
       if (upErr) {
         toast.error(`${f.name}: ${upErr.message}`);
         continue;
       }
-      const docResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          "Content-Type": "application/json",
+      const docResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vendor-quotations`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.data.session?.access_token ?? ""}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "document",
+            quotation_id: q.id,
+            file_name: f.name,
+            file_path: path,
+            mime_type: f.type,
+            size_bytes: f.size,
+          }),
         },
-        body: JSON.stringify({
-          action: "document",
-          quotation_id: q.id,
-          file_name: f.name,
-          file_path: path,
-          mime_type: f.type,
-          size_bytes: f.size,
-        }),
-      });
-      if (!docResponse.ok) toast.error(`${f.name}: ${lang === "ar" ? "تعذر حفظ بيانات الملف" : "Unable to save file details"}`);
+      );
+      if (!docResponse.ok)
+        toast.error(
+          `${f.name}: ${lang === "ar" ? "تعذر حفظ بيانات الملف" : "Unable to save file details"}`,
+        );
     }
 
     setSubmitting(false);
@@ -202,13 +284,18 @@ export default function Dashboard() {
     );
   };
 
-  const unread = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+  const unread = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications],
+  );
 
   const filteredReqs = useMemo(() => {
     if (filterCat === "all") return reqs;
     if (filterCat === "mine") {
       if (!myCategoryIds.length) return reqs;
-      return reqs.filter((r) => r.category_id && myCategoryIds.includes(r.category_id));
+      return reqs.filter(
+        (r) => r.category_id && myCategoryIds.includes(r.category_id),
+      );
     }
     return reqs.filter((r) => r.category_id === filterCat);
   }, [reqs, filterCat, myCategoryIds]);
@@ -216,7 +303,7 @@ export default function Dashboard() {
   const categoryName = (id: string | null) => {
     if (!id) return null;
     const c = categories.find((x) => x.id === id);
-    return c ? ((lang === "ar" && c.name_ar) || c.name) : null;
+    return c ? (lang === "ar" && c.name_ar) || c.name : null;
   };
 
   return (
@@ -224,7 +311,9 @@ export default function Dashboard() {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">{t("dash.title")}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("dash.title")}
+          </h1>
           <p className="text-muted-foreground mt-1">{user?.email}</p>
         </div>
 
@@ -243,7 +332,11 @@ export default function Dashboard() {
             <TabsTrigger value="notifs" className="gap-1.5">
               <Bell className="h-3.5 w-3.5" />
               {t("dash.notifications")}
-              {unread > 0 && <Badge className="bg-accent text-accent-foreground h-5 px-1.5">{unread}</Badge>}
+              {unread > 0 && (
+                <Badge className="bg-accent text-accent-foreground h-5 px-1.5">
+                  {unread}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -258,9 +351,13 @@ export default function Dashboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{lang === "ar" ? "كل المناقصات" : "All tenders"}</SelectItem>
+                  <SelectItem value="all">
+                    {lang === "ar" ? "كل المناقصات" : "All tenders"}
+                  </SelectItem>
                   <SelectItem value="mine" disabled={!myCategoryIds.length}>
-                    {lang === "ar" ? "مطابقة لتصنيفاتي" : "Matching my categories"}
+                    {lang === "ar"
+                      ? "مطابقة لتصنيفاتي"
+                      : "Matching my categories"}
                   </SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
@@ -274,15 +371,23 @@ export default function Dashboard() {
               </span>
             </div>
             {filteredReqs.length === 0 ? (
-              <Card><CardContent className="p-10 text-center text-muted-foreground">{t("req.no_open")}</CardContent></Card>
+              <Card>
+                <CardContent className="p-10 text-center text-muted-foreground">
+                  {t("req.no_open")}
+                </CardContent>
+              </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredReqs.map((r) => (
                   <Card key={r.id} className="border-border/60 shadow-card">
                     <CardHeader>
-                      <CardTitle className="text-lg">{(lang === "ar" && r.title_ar) || r.title}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {(lang === "ar" && r.title_ar) || r.title}
+                      </CardTitle>
                       {(categoryName(r.category_id) || r.category) && (
-                        <CardDescription>{categoryName(r.category_id) || r.category}</CardDescription>
+                        <CardDescription>
+                          {categoryName(r.category_id) || r.category}
+                        </CardDescription>
                       )}
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -292,10 +397,16 @@ export default function Dashboard() {
                       {r.deadline && (
                         <div className="text-xs text-muted-foreground flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5" />
-                          {t("req.deadline")}: {new Date(r.deadline).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-GB")}
+                          {t("req.deadline")}:{" "}
+                          {new Date(r.deadline).toLocaleDateString(
+                            lang === "ar" ? "ar-KW" : "en-GB",
+                          )}
                         </div>
                       )}
-                      <Button onClick={() => setActiveReq(r)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Button
+                        onClick={() => setActiveReq(r)}
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
                         {t("req.submit")}
                       </Button>
                     </CardContent>
@@ -307,7 +418,11 @@ export default function Dashboard() {
 
           <TabsContent value="quotes" className="mt-6">
             {quotations.length === 0 ? (
-              <Card><CardContent className="p-10 text-center text-muted-foreground">{t("dash.no_quotations")}</CardContent></Card>
+              <Card>
+                <CardContent className="p-10 text-center text-muted-foreground">
+                  {t("dash.no_quotations")}
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-3">
                 {quotations.map((q) => (
@@ -315,12 +430,21 @@ export default function Dashboard() {
                     <CardContent className="p-5 flex flex-wrap items-center gap-4 justify-between">
                       <div>
                         <div className="font-semibold">
-                          {(lang === "ar" && q.ho_requirements?.title_ar) || q.ho_requirements?.title || "—"}
+                          {(lang === "ar" && q.ho_requirements?.title_ar) ||
+                            q.ho_requirements?.title ||
+                            "—"}
                         </div>
                         <div className="text-sm text-muted-foreground mt-0.5">
-                          {q.price.toLocaleString()} {q.currency} · {new Date(q.created_at).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-GB")}
+                          {q.price.toLocaleString()} {q.currency} ·{" "}
+                          {new Date(q.created_at).toLocaleDateString(
+                            lang === "ar" ? "ar-KW" : "en-GB",
+                          )}
                         </div>
-                        {q.notes && <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-xl">{q.notes}</div>}
+                        {q.notes && (
+                          <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-xl">
+                            {q.notes}
+                          </div>
+                        )}
                       </div>
                       {statusBadge(q.status)}
                     </CardContent>
@@ -340,17 +464,34 @@ export default function Dashboard() {
 
           <TabsContent value="notifs" className="mt-6">
             {notifications.length === 0 ? (
-              <Card><CardContent className="p-10 text-center text-muted-foreground">{t("dash.no_notifications")}</CardContent></Card>
+              <Card>
+                <CardContent className="p-10 text-center text-muted-foreground">
+                  {t("dash.no_notifications")}
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-2">
                 {notifications.map((n) => (
-                  <Card key={n.id} className={n.read ? "border-border/60" : "border-accent/40 bg-accent/5"}>
+                  <Card
+                    key={n.id}
+                    className={
+                      n.read
+                        ? "border-border/60"
+                        : "border-accent/40 bg-accent/5"
+                    }
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="font-medium">{n.title}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-GB")}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(n.created_at).toLocaleDateString(
+                            lang === "ar" ? "ar-KW" : "en-GB",
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1">{n.message}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {n.message}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -366,17 +507,31 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle>{t("qf.title")}</DialogTitle>
             <DialogDescription>
-              {activeReq && ((lang === "ar" && activeReq.title_ar) || activeReq.title)}
+              {activeReq &&
+                ((lang === "ar" && activeReq.title_ar) || activeReq.title)}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="price">{t("qf.price")}</Label>
-              <Input id="price" type="number" step="0.001" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <Input
+                id="price"
+                type="number"
+                step="0.001"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="notes">{t("qf.notes")}</Label>
-              <Textarea id="notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
+              <Textarea
+                id="notes"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                maxLength={2000}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>{t("qf.documents")}</Label>
@@ -395,9 +550,19 @@ export default function Dashboard() {
               {files.length > 0 && (
                 <ul className="text-xs space-y-1 mt-2">
                   {files.map((f, i) => (
-                    <li key={i} className="flex items-center justify-between gap-2 bg-secondary/50 rounded px-2 py-1">
-                      <span className="flex items-center gap-1.5 truncate"><FileText className="h-3 w-3" /> {f.name}</span>
-                      <button onClick={() => setFiles(files.filter((_, j) => j !== i))} aria-label="remove">
+                    <li
+                      key={i}
+                      className="flex items-center justify-between gap-2 bg-secondary/50 rounded px-2 py-1"
+                    >
+                      <span className="flex items-center gap-1.5 truncate">
+                        <FileText className="h-3 w-3" /> {f.name}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setFiles(files.filter((_, j) => j !== i))
+                        }
+                        aria-label="remove"
+                      >
                         <X className="h-3 w-3" />
                       </button>
                     </li>
@@ -407,8 +572,14 @@ export default function Dashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>{lang === "ar" ? "إلغاء" : "Cancel"}</Button>
-            <Button onClick={onSubmit} disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button variant="outline" onClick={closeDialog}>
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              onClick={onSubmit}
+              disabled={submitting}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               {submitting ? t("auth.processing") : t("qf.submit")}
             </Button>
           </DialogFooter>
