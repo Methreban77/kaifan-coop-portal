@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
 export type Lang = "en" | "ar";
 
@@ -18,10 +24,13 @@ export const dict: Dict = {
   "nav.logout": { en: "Logout", ar: "تسجيل خروج" },
 
   // Hero
-  "hero.title": { en: "Kaifan Co-operative Society", ar: "جمعية كيفان التعاونية" },
+  "hero.title": {
+    en: "Kaifan Co-operative Society",
+    ar: "جمعية كيفان التعاونية",
+  },
   "hero.subtitle": {
-    en: "Serving our community since 1973. Trusted by thousands of shareholders, partnered with hundreds of vendors.",
-    ar: "نخدم مجتمعنا منذ عام 1973. موثوق بنا من قبل آلاف المساهمين وشركاء مع مئات الموردين.",
+    en: "Serving our community since 1962. Trusted by thousands of shareholders, partnered with hundreds of vendors.",
+    ar: "نخدم مجتمعنا منذ عام 1962. موثوق بنا من قبل آلاف المساهمين وشركاء مع مئات الموردين.",
   },
   "hero.cta_vendor": { en: "Apply as Vendor", ar: "تقدم كمورد" },
   "hero.cta_view": { en: "View Tenders", ar: "عرض المناقصات" },
@@ -33,15 +42,21 @@ export const dict: Dict = {
   "stats.vendors": { en: "Active Vendors", ar: "الموردون النشطون" },
 
   // About
-  "about.title": { en: "About Kaifan Co-operative", ar: "عن جمعية كيفان التعاونية" },
+  "about.title": {
+    en: "About Kaifan Co-operative",
+    ar: "عن جمعية كيفان التعاونية",
+  },
   "about.body": {
-    en: "Kaifan Co-operative Society is one of Kuwait's leading consumer co-operatives, established in 1973. We operate a network of supermarkets and service centers serving the Kaifan community and beyond. Owned by our shareholders, we are committed to quality, fair pricing, and supporting local businesses through transparent procurement.",
-    ar: "جمعية كيفان التعاونية هي إحدى الجمعيات التعاونية الاستهلاكية الرائدة في الكويت، تأسست عام 1973. نحن ندير شبكة من الأسواق المركزية ومراكز الخدمة لخدمة مجتمع كيفان وما حوله. مملوكة لمساهمينا، ونحن ملتزمون بالجودة والأسعار العادلة ودعم الشركات المحلية من خلال المشتريات الشفافة.",
+    en: "Kaifan Co-operative Society is one of Kuwait's leading consumer co-operatives, established in 1962. We operate a network of supermarkets and service centers serving the Kaifan community and beyond. Owned by our shareholders, we are committed to quality, fair pricing, and supporting local businesses through transparent procurement.",
+    ar: "جمعية كيفان التعاونية هي إحدى الجمعيات التعاونية الاستهلاكية الرائدة في الكويت، تأسست عام 1962. نحن ندير شبكة من الأسواق المركزية ومراكز الخدمة لخدمة مجتمع كيفان وما حوله. مملوكة لمساهمينا، ونحن ملتزمون بالجودة والأسعار العادلة ودعم الشركات المحلية من خلال المشتريات الشفافة.",
   },
 
   // Board
   "board.title": { en: "Board of Directors", ar: "مجلس الإدارة" },
-  "board.subtitle": { en: "Elected by our shareholders to lead with integrity", ar: "منتخبون من مساهمينا لقيادة بنزاهة" },
+  "board.subtitle": {
+    en: "Elected by our shareholders to lead with integrity",
+    ar: "منتخبون من مساهمينا لقيادة بنزاهة",
+  },
   "board.chairman": { en: "Chairman", ar: "رئيس مجلس الإدارة" },
   "board.vice": { en: "Vice Chairman", ar: "نائب الرئيس" },
   "board.treasurer": { en: "Treasurer", ar: "أمين الصندوق" },
@@ -49,14 +64,20 @@ export const dict: Dict = {
   "board.member": { en: "Board Member", ar: "عضو مجلس الإدارة" },
 
   // Requirements
-  "req.title": { en: "Current HO Requirements", ar: "احتياجات الإدارة العامة الحالية" },
+  "req.title": {
+    en: "Current HO Requirements",
+    ar: "احتياجات الإدارة العامة الحالية",
+  },
   "req.subtitle": {
     en: "Open tenders. Submit your quotation — lowest approved bid wins.",
     ar: "مناقصات مفتوحة. قدم عرض الأسعار الخاص بك — يفوز العرض الأقل المعتمد.",
   },
   "req.deadline": { en: "Deadline", ar: "الموعد النهائي" },
   "req.submit": { en: "Submit Quotation", ar: "تقديم عرض سعر" },
-  "req.no_open": { en: "No open tenders right now. Please check back soon.", ar: "لا توجد مناقصات مفتوحة حالياً. يرجى التحقق لاحقاً." },
+  "req.no_open": {
+    en: "No open tenders right now. Please check back soon.",
+    ar: "لا توجد مناقصات مفتوحة حالياً. يرجى التحقق لاحقاً.",
+  },
   "req.status.open": { en: "Open", ar: "مفتوح" },
   "req.status.closed": { en: "Closed", ar: "مغلق" },
   "req.status.awarded": { en: "Awarded", ar: "تم الترسية" },
@@ -69,7 +90,10 @@ export const dict: Dict = {
   "auth.full_name": { en: "Full Name", ar: "الاسم الكامل" },
   "auth.company": { en: "Company Name", ar: "اسم الشركة" },
   "auth.phone": { en: "Phone", ar: "الهاتف" },
-  "auth.have_account": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
+  "auth.have_account": {
+    en: "Already have an account?",
+    ar: "لديك حساب بالفعل؟",
+  },
   "auth.no_account": { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
   "auth.processing": { en: "Processing…", ar: "جاري المعالجة…" },
   "auth.welcome": { en: "Vendor Portal", ar: "بوابة الموردين" },
@@ -79,16 +103,25 @@ export const dict: Dict = {
   "dash.open_tenders": { en: "Open Tenders", ar: "المناقصات المفتوحة" },
   "dash.my_quotations": { en: "My Quotations", ar: "عروضي" },
   "dash.notifications": { en: "Notifications", ar: "الإشعارات" },
-  "dash.no_quotations": { en: "You have not submitted any quotations yet.", ar: "لم تقم بتقديم أي عروض بعد." },
+  "dash.no_quotations": {
+    en: "You have not submitted any quotations yet.",
+    ar: "لم تقم بتقديم أي عروض بعد.",
+  },
   "dash.no_notifications": { en: "No notifications.", ar: "لا توجد إشعارات." },
 
   // Quotation form
   "qf.title": { en: "Submit Quotation", ar: "تقديم عرض سعر" },
   "qf.price": { en: "Price (KWD)", ar: "السعر (د.ك)" },
   "qf.notes": { en: "Notes / Specifications", ar: "ملاحظات / المواصفات" },
-  "qf.documents": { en: "Attach Documents (PDF, images, etc.)", ar: "إرفاق المستندات (PDF، صور، إلخ.)" },
+  "qf.documents": {
+    en: "Attach Documents (PDF, images, etc.)",
+    ar: "إرفاق المستندات (PDF، صور، إلخ.)",
+  },
   "qf.submit": { en: "Submit", ar: "إرسال" },
-  "qf.success": { en: "Quotation submitted successfully", ar: "تم تقديم العرض بنجاح" },
+  "qf.success": {
+    en: "Quotation submitted successfully",
+    ar: "تم تقديم العرض بنجاح",
+  },
 
   // Status
   "status.pending": { en: "Pending", ar: "قيد المراجعة" },
@@ -97,8 +130,14 @@ export const dict: Dict = {
 
   // Footer
   "footer.contact": { en: "Contact", ar: "اتصل بنا" },
-  "footer.address": { en: "Kaifan, Kuwait City, Kuwait", ar: "كيفان، مدينة الكويت، الكويت" },
-  "footer.rights": { en: "© 2026 Kaifan Co-operative Society. All rights reserved.", ar: "© 2026 جمعية كيفان التعاونية. جميع الحقوق محفوظة." },
+  "footer.address": {
+    en: "Kaifan, Kuwait City, Kuwait",
+    ar: "كيفان، مدينة الكويت، الكويت",
+  },
+  "footer.rights": {
+    en: "© 2026 Kaifan Co-operative Society. All rights reserved.",
+    ar: "© 2026 جمعية كيفان التعاونية. جميع الحقوق محفوظة.",
+  },
 };
 
 interface I18nCtx {
@@ -111,7 +150,9 @@ interface I18nCtx {
 const Ctx = createContext<I18nCtx | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => (localStorage.getItem("kaifan-lang") as Lang) || "en");
+  const [lang, setLangState] = useState<Lang>(
+    () => (localStorage.getItem("kaifan-lang") as Lang) || "en",
+  );
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -123,7 +164,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const t = (key: keyof typeof dict) => dict[key]?.[lang] ?? String(key);
   const dir = lang === "ar" ? "rtl" : "ltr";
 
-  return <Ctx.Provider value={{ lang, setLang, t, dir }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ lang, setLang, t, dir }}>{children}</Ctx.Provider>
+  );
 }
 
 export function useI18n() {
