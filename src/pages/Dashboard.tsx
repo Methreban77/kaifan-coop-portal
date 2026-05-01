@@ -174,27 +174,37 @@ export default function Dashboard() {
     loadAll();
   }, [user]);
 
-  // Real-time: listen for new notifications (e.g. admin approval)
+  // Poll for new notifications every 30 seconds and toast when one arrives
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`notifications:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const n = payload.new as Notification;
-          setNotifications((prev) => [n, ...prev]);
-          toast(n.title, { description: n.message });
-        },
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    let lastSeenId: string | null = null;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!data?.length) return;
+      const latest = data[0];
+      if (lastSeenId === null) {
+        lastSeenId = latest.id;
+        return;
+      }
+      if (latest.id !== lastSeenId) {
+        const prevDate = new Date(data.find((x) => x.id === lastSeenId)?.created_at ?? 0);
+        data
+          .filter((n) => n.id !== lastSeenId && new Date(n.created_at) > prevDate)
+          .forEach((n) => toast(n.title, { description: n.message }));
+        lastSeenId = latest.id;
+        setNotifications(data as Notification[]);
+      }
+    };
+
+    const interval = setInterval(poll, 30_000);
+    return () => clearInterval(interval);
   }, [user]);
 
   // Open submission dialog if ?req= present
