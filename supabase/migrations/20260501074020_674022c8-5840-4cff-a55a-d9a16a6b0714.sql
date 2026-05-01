@@ -1,0 +1,9 @@
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'employee';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'manager';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'shareholder';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'partner';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'hr_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'procurement_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'shareholder_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'partner_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'it_admin';
