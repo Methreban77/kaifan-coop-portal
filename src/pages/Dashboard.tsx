@@ -484,9 +484,12 @@ export default function Dashboard() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="font-medium">{n.title}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(n.created_at).toLocaleDateString(
-                            lang === "ar" ? "ar-KW" : "en-GB",
-                          )}
+                          {n.created_at &&
+                          !isNaN(new Date(n.created_at).getTime())
+                            ? new Date(n.created_at).toLocaleDateString(
+                                lang === "ar" ? "ar-KW" : "en-GB",
+                              )
+                            : ""}
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
