@@ -118,14 +118,13 @@ export default function Dashboard() {
         },
       },
     );
-    const [r, quotesResponse, n, c, p] = await Promise.all([
+    const [r, quotesResponse, cats, prof, notifResult] = await Promise.all([
       supabase
         .from("ho_requirements")
         .select("*")
         .eq("status", "open")
         .order("deadline", { ascending: true, nullsFirst: false }),
       quotesRequest,
-      //  supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
       supabase
         .from("partner_categories")
         .select("id,name,name_ar")
@@ -136,37 +135,28 @@ export default function Dashboard() {
         .select("primary_category_id,category_ids")
         .eq("partner_id", user.id)
         .maybeSingle(),
-    ]);
-
-    let notificationsData = [];
-
-    if (user) {
-      const { data } = await supabase
+      supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(20);
-
-      notificationsData = data ?? [];
-    }
-
-    setNotifications(notificationsData);
+        .limit(20),
+    ]);
 
     const quotesResult = await quotesResponse
       .json()
       .catch(() => ({ quotations: [] }));
     setReqs((r.data as Requirement[]) ?? []);
     setQuotations((quotesResponse.ok ? quotesResult.quotations : []) ?? []);
-    setNotifications((n.data as Notification[]) ?? []);
-    setCategories((c.data as Category[]) ?? []);
-    const prof = p.data as {
+    setCategories((cats.data as Category[]) ?? []);
+    setNotifications((notifResult.data as Notification[]) ?? []);
+    const profData = prof.data as {
       primary_category_id: string | null;
       category_ids: string[];
     } | null;
     const ids = new Set<string>();
-    if (prof?.primary_category_id) ids.add(prof.primary_category_id);
-    (prof?.category_ids ?? []).forEach((x) => ids.add(x));
+    if (profData?.primary_category_id) ids.add(profData.primary_category_id);
+    (profData?.category_ids ?? []).forEach((x) => ids.add(x));
     setMyCategoryIds(Array.from(ids));
   };
 
@@ -194,9 +184,13 @@ export default function Dashboard() {
         return;
       }
       if (latest.id !== lastSeenId) {
-        const prevDate = new Date(data.find((x) => x.id === lastSeenId)?.created_at ?? 0);
+        const prevDate = new Date(
+          data.find((x) => x.id === lastSeenId)?.created_at ?? 0,
+        );
         data
-          .filter((n) => n.id !== lastSeenId && new Date(n.created_at) > prevDate)
+          .filter(
+            (n) => n.id !== lastSeenId && new Date(n.created_at) > prevDate,
+          )
           .forEach((n) => toast(n.title, { description: n.message }));
         lastSeenId = latest.id;
         setNotifications(data as Notification[]);
@@ -312,7 +306,7 @@ export default function Dashboard() {
     };
     return (
       <Badge variant="outline" className={map[s]}>
-        {t(`status.${s}` as any)}
+        {t(`status.${s}` as `status.${Quotation["status"]}`)}
       </Badge>
     );
   };
