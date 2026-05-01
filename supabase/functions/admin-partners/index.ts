@@ -93,10 +93,28 @@ Deno.serve(async (req) => {
         return Response.json({ error: updateError.message }, { status: 503, headers: corsHeaders });
       }
 
+      const notifTitle =
+        status === "active"
+          ? "Account Approved"
+          : status === "suspended"
+          ? "Account Suspended"
+          : status === "rejected"
+          ? "Account Rejected"
+          : "Account Status Updated";
+
+      const notifMessage =
+        status === "active"
+          ? "Your vendor account has been approved by the admin. You can now submit quotations on open tenders."
+          : status === "suspended"
+          ? `Your account has been suspended.${reason ? ` Reason: ${reason}` : ""}`
+          : status === "rejected"
+          ? `Your account application has been rejected.${reason ? ` Reason: ${reason}` : ""}`
+          : `Your account status is now: ${status}`;
+
       await adminClient.from("notifications").insert({
         user_id: partnerId,
-        title: "Account status updated",
-        message: `Your account status is now: ${status}${reason ? ` — ${reason}` : ""}`,
+        title: notifTitle,
+        message: notifMessage,
       });
 
       return Response.json({ ok: true }, { headers: corsHeaders });

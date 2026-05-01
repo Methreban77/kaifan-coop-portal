@@ -174,6 +174,29 @@ export default function Dashboard() {
     loadAll();
   }, [user]);
 
+  // Real-time: listen for new notifications (e.g. admin approval)
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const n = payload.new as Notification;
+          setNotifications((prev) => [n, ...prev]);
+          toast(n.title, { description: n.message });
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   // Open submission dialog if ?req= present
   useEffect(() => {
     const id = params.get("req");

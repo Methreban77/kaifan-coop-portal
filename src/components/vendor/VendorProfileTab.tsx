@@ -36,6 +36,7 @@ interface VendorProfile {
   avg_rating: number;
   ratings_count: number;
   status: string;
+  approval_status: "pending" | "active" | "suspended" | "rejected" | null;
 }
 
 const profileSchema = z.object({
@@ -162,9 +163,28 @@ export function VendorProfileTab() {
             </div>
           </div>
           <div className="flex-1" />
-          <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-            {lang === "ar" ? "نشط" : "Active"}
-          </Badge>
+          {(() => {
+            const s = profile?.approval_status;
+            const cls =
+              s === "active"
+                ? "bg-success/10 text-success border-success/30"
+                : s === "suspended" || s === "rejected"
+                ? "bg-destructive/10 text-destructive border-destructive/30"
+                : "bg-accent/15 text-accent-foreground border-accent/30";
+            const label =
+              s === "active"
+                ? lang === "ar" ? "نشط · معتمد" : "Active · Approved"
+                : s === "suspended"
+                ? lang === "ar" ? "موقوف" : "Suspended"
+                : s === "rejected"
+                ? lang === "ar" ? "مرفوض" : "Rejected"
+                : lang === "ar" ? "قيد المراجعة" : "Pending Review";
+            return (
+              <Badge variant="outline" className={cls}>
+                {label}
+              </Badge>
+            );
+          })()}
         </CardContent>
       </Card>
 
