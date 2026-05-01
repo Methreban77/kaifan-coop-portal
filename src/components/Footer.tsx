@@ -31,7 +31,7 @@ export function Footer() {
               <Phone className="h-4 w-4" /> +965 0000 0000
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4" /> info@kaifancoop.net
+              <Mail className="h-4 w-4" /> it@kaifancoop.net
             </li>
           </ul>
         </div>
