@@ -36,18 +36,28 @@ export function VendorsAdminTab() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-partners", { method: "GET" });
-      if (error) throw error;
+      const [partnersRes, catsRes] = await Promise.all([
+        supabase.from("partner_profiles").select("partner_id, avg_rating, ratings_count, approval_status, primary_category_id, contact_person, contact_mobile").order("approval_status", { ascending: true }),
+        supabase.from("partner_categories").select("id, name, name_ar"),
+      ]);
 
-      const vp = data?.partners ?? [];
-      const profiles = data?.profiles ?? [];
-      const cats = data?.categories ?? [];
+      if (partnersRes.error) throw partnersRes.error;
+      if (catsRes.error) throw catsRes.error;
 
-      const profMap = new Map<string, { email: string | null; company_name: string | null }>((profiles ?? []).map((p: any) => [p.id, p]));
-      const catMap = new Map((cats ?? []).map((c: any) => [c.id, lang === "ar" ? (c.name_ar ?? c.name) : c.name]));
+      const partners = partnersRes.data ?? [];
+      const ids = partners.map((p) => p.partner_id);
+
+      const profilesRes = ids.length
+        ? await supabase.from("profiles").select("id, email, company_name").in("id", ids)
+        : { data: [], error: null };
+
+      if (profilesRes.error) throw profilesRes.error;
+
+      const profMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+      const catMap = new Map((catsRes.data ?? []).map((c) => [c.id, lang === "ar" ? (c.name_ar ?? c.name) : c.name]));
 
       setRows(
-        (vp ?? []).map((v: any) => ({
+        partners.map((v) => ({
           partner_id: v.partner_id,
           email: profMap.get(v.partner_id)?.email ?? null,
           company_name: profMap.get(v.partner_id)?.company_name ?? null,
@@ -55,7 +65,7 @@ export function VendorsAdminTab() {
           contact_mobile: v.contact_mobile,
           avg_rating: Number(v.avg_rating),
           ratings_count: v.ratings_count,
-          approval_status: v.approval_status,
+          approval_status: v.approval_status as PartnerStatus,
           primary_category: v.primary_category_id ? catMap.get(v.primary_category_id) ?? null : null,
         })),
       );
@@ -72,11 +82,31 @@ export function VendorsAdminTab() {
   useEffect(() => { load(); }, [lang]);
 
   const updateStatus = async (partnerId: string, status: PartnerStatus, reason?: string | null) => {
-    const { error } = await supabase.functions.invoke("admin-partners", {
-      method: "PATCH",
-      body: { partnerId, status, reason: reason ?? null },
-    });
+    const payload: Record<string, unknown> = { approval_status: status };
+    if (status === "active") {
+      const { data: { user } } = await supabase.auth.getUser();
+      payload.approved_at = new Date().toISOString();
+      payload.approved_by = user?.id ?? null;
+      payload.suspension_reason = null;
+    }
+    if (status === "suspended") payload.suspension_reason = reason ?? null;
+
+    const { error } = await supabase.from("partner_profiles").update(payload).eq("partner_id", partnerId);
     if (error) return toast.error(error.message);
+
+    const notifTitle =
+      status === "active" ? "Account Approved"
+      : status === "suspended" ? "Account Suspended"
+      : status === "rejected" ? "Account Rejected"
+      : "Account Status Updated";
+
+    const notifMessage =
+      status === "active" ? "Your vendor account has been approved by the admin. You can now submit quotations on open tenders."
+      : status === "suspended" ? `Your account has been suspended.${reason ? ` Reason: ${reason}` : ""}`
+      : status === "rejected" ? `Your account application has been rejected.${reason ? ` Reason: ${reason}` : ""}`
+      : `Your account status is now: ${status}`;
+
+    await supabase.from("notifications").insert({ user_id: partnerId, title: notifTitle, message: notifMessage });
 
     toast.success(lang === "ar" ? "تم التحديث" : "Updated");
     load();
