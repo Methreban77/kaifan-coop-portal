@@ -21,9 +21,20 @@ const roleOrder = [
 ];
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-const publishableKey =
-  Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
+
+function decodeJwtSub(token: string): string | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(decoded);
+    return claims.sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,27 +51,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 1) Validate the JWT using the user-context client.
-    const authClient = createClient(supabaseUrl, publishableKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const { data: claimsData, error: authError } = await authClient.auth.getClaims(token);
-    const userId = claimsData?.claims?.sub;
-    if (authError || !userId) {
+    // Decode JWT to get userId (already verified by Supabase edge runtime)
+    const userId = decodeJwtSub(token);
+    if (!userId) {
       return Response.json(
-        { error: "Invalid session" },
+        { error: "Invalid token" },
         { status: 401, headers: corsHeaders },
       );
     }
 
-    // 2) Read roles via service-role client (bypasses RLS, no persistent socket).
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    // Try service role client first, fall back to user-context client
+    const clientKey = serviceRoleKey || anonKey;
+    const clientOptions = serviceRoleKey
+      ? { auth: { persistSession: false, autoRefreshToken: false } }
+      : {
+          global: { headers: { Authorization: authHeader } },
+          auth: { persistSession: false, autoRefreshToken: false },
+        };
 
-    const { data, error } = await adminClient
+    const client = createClient(supabaseUrl, clientKey, clientOptions);
+
+    const { data, error } = await client
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);

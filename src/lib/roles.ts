@@ -22,30 +22,24 @@ export interface UserRolesResponse {
   primary: AppRole | null;
 }
 
-export async function fetchCurrentUserRoles(accessToken?: string): Promise<UserRolesResponse> {
-  const token = accessToken ?? (await supabase.auth.getSession()).data.session?.access_token;
+export async function fetchCurrentUserRoles(_accessToken?: string): Promise<UserRolesResponse> {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!token) {
+  if (userError || !user) {
     throw new Error("No active session. Please sign in again.");
   }
 
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-roles`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      "Content-Type": "application/json",
-    },
-  });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
 
-  const data = (await response.json()) as Partial<UserRolesResponse> & { error?: string };
-
-  if (!response.ok) {
-    throw new Error(data.error ?? `Unable to load roles (${response.status})`);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  const roles = data?.roles ?? [];
-  const primary = data?.primary ?? roleOrder.find((role) => roles.includes(role)) ?? roles[0] ?? null;
+  const roles = (data ?? []).map((r) => r.role as AppRole);
+  const primary = roleOrder.find((role) => roles.includes(role)) ?? roles[0] ?? null;
 
   return { roles, primary };
 }
