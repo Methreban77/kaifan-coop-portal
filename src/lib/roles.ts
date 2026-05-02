@@ -23,16 +23,18 @@ export interface UserRolesResponse {
 }
 
 export async function fetchCurrentUserRoles(_accessToken?: string): Promise<UserRolesResponse> {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  // Use getSession() — reads from localStorage, no network call
+  const { data: sessionData } = await supabase.auth.getSession();
+  const session = sessionData.session;
 
-  if (userError || !user) {
+  if (!session) {
     throw new Error("No active session. Please sign in again.");
   }
 
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
-    .eq("user_id", user.id);
+    .eq("user_id", session.user.id);
 
   if (error) {
     throw new Error(error.message);

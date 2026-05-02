@@ -96,8 +96,13 @@ export default function Auth() {
     if (error) return toast.error(error.message);
     toast.success(lang === "ar" ? "تم تسجيل الدخول" : "Signed in");
     if (data.session) {
-      const { primary } = await fetchCurrentUserRoles(data.session.access_token);
-      navigate(pathForRole(primary), { replace: true });
+      try {
+        const { primary } = await fetchCurrentUserRoles(data.session.access_token);
+        const dest = primary ? pathForRole(primary) : (role === "admin" ? "/admin" : "/dashboard");
+        navigate(dest, { replace: true });
+      } catch {
+        navigate(role === "admin" ? "/admin" : "/dashboard", { replace: true });
+      }
     }
   };
 
